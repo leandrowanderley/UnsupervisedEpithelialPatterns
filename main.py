@@ -5,172 +5,172 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 import warnings
+import seaborn as sns # Biblioteca essencial para boxplots e distribuições
 
 warnings.filterwarnings('ignore', category=FutureWarning)
 warnings.filterwarnings('ignore', category=UserWarning)
 
-# 1. SIMULAÇÃO DO CARREGAMENTO DE DADOS (Substitua esta seção pelo seu carregamento real)
+# --- FASES 1 a 3: CARREGAMENTO E TRATAMENTO ---
+
+# 1. SIMULAÇÃO DO CARREGAMENTO DE DADOS 
 print("--- 1. Carregando e Visualizando Dados Simulados ---")
-
 epi_cols = ['C', 'S', 'ST', 'T', 'IT', 'I', 'IN', 'N', 'SN']
-
+np.random.seed(42) # Garante reprodutibilidade
 data = {
-    'Index': range(100),
-    'pID': [f'P{i:03d}' for i in range(100)],   
-    'Age': np.random.randint(20, 70, 100),
-    'Gender': np.random.choice(['M', 'F'], 100),
+    'Index': range(100), 'pID': [f'P{i:03d}' for i in range(100)],
+    'Age': np.random.randint(20, 70, 100), 'Gender': np.random.choice(['M', 'F'], 100),
     'Eye': np.random.choice(['OS', 'OD'], 100),
-    'C': np.random.normal(55, 3, 100),
-    'S': np.random.normal(60, 4, 100),
-    'ST': np.random.normal(62, 5, 100),
-    'T': np.random.normal(58, 4, 100),
-    'IT': np.random.normal(61, 3, 100),
-    'I': np.random.normal(63, 4, 100),
-    'IN': np.random.normal(60, 3, 100),
-    'N': np.random.normal(59, 4, 100),
+    'C': np.random.normal(55, 3, 100), 'S': np.random.normal(60, 4, 100),
+    'ST': np.random.normal(62, 5, 100), 'T': np.random.normal(58, 4, 100),
+    'IT': np.random.normal(61, 3, 100), 'I': np.random.normal(63, 4, 100),
+    'IN': np.random.normal(60, 3, 100), 'N': np.random.normal(59, 4, 100),
     'SN': np.random.normal(62, 5, 100),
 }
 df = pd.DataFrame(data)
-
-# Injetando valores extremos e um NaN
-df.loc[3, 'C'] = 120  # Outlier extremo
-df.loc[10, 'S'] = 20   # Outlier extremo
-df.loc[50, 'IN'] = np.nan # Missing Value
-
+# Injetando Outliers e NaN (para simular a necessidade de limpeza)
+df.loc[3, 'C'] = 120; df.loc[10, 'S'] = 20; df.loc[50, 'IN'] = np.nan
 df[epi_cols] = df[epi_cols].round(0)
-print(df.head(10))
-print("\nEstatísticas antes da Winsorização:")
-print(df[epi_cols].describe().T[['min', 'max', 'mean', 'std']])
-
 
 # 2. TRATAMENTO DE DADOS AUSENTES (Missing Values)
-print("\n--- 2. Tratamento de Missing Values ---")
-
-missing_count = df[epi_cols].isnull().sum().sum()
-print(f"Total de NaNs nas colunas de espessura antes: {missing_count}")
-
 for col in epi_cols:
-    median_val = df[col].median()
-    df[col] = df[col].fillna(median_val)
-
-missing_count_after = df[epi_cols].isnull().sum().sum()
-print(f"Total de NaNs nas colunas de espessura após a imputação: {missing_count_after}")
-
+    df[col] = df[col].fillna(df[col].median())
 
 # 3. WINSORIZAÇÃO (Limitação de Outliers)
 print("\n--- 3. Winsorização (Tratamento de Outliers) ---")
-
 df_processed = df.copy()
-
-LOWER_BOUND = 0.05
-UPPER_BOUND = 0.95
-
-print(f"Aplicando Winsorização com limites: {LOWER_BOUND*100:.0f}% e {UPPER_BOUND*100:.0f}%")
-
+LOWER_BOUND = 0.05; UPPER_BOUND = 0.95
 for col in epi_cols:
-    # 1. Calcular os limites
     lower_limit = df_processed[col].quantile(LOWER_BOUND)
     upper_limit = df_processed[col].quantile(UPPER_BOUND)
-
-    # 2. Aplicar a Winsorização
     df_processed[col] = np.where(df_processed[col] < lower_limit, lower_limit, df_processed[col])
     df_processed[col] = np.where(df_processed[col] > upper_limit, upper_limit, df_processed[col])
-
     df_processed[col] = df_processed[col].astype(int)
 
 
-# 4. VISUALIZAÇÃO PÓS-PROCESSAMENTO
-print("\nEstatísticas após Winsorização:")
-print(df_processed[epi_cols].describe().T[['min', 'max', 'mean', 'std']])
+# --- VISUALIZAÇÃO 1: EFEITO DA WINSORIZAÇÃO EM TODAS AS COLUNAS (FORMATO SOLICITADO) ---
+print("\n--- 4. Visualização: Boxplots Antes e Depois da Winsorização ---")
 
-# Comparando os valores extremos que foram "winsorizados"
-print("\nComparação dos Outliers (Linhas 3 e 10):")
-print(f"Original C (Linha 3): {df.loc[3, 'C']} -> Processado C: {df_processed.loc[3, 'C']}")
-print(f"Original S (Linha 10): {df.loc[10, 'S']} -> Processado S: {df_processed.loc[10, 'S']}")
+# 1. Cria um DataFrame longo (tidy) para o Seaborn
+df_plot_winsor = pd.DataFrame()
+df_plot_winsor['Antes'] = df[epi_cols].stack()
+df_plot_winsor['Depois'] = df_processed[epi_cols].stack()
+df_plot_winsor['Variável'] = df[epi_cols].columns.repeat(len(df))
+df_plot_winsor = df_plot_winsor.melt(id_vars='Variável', value_vars=['Antes', 'Depois'], 
+                                     var_name='Status', value_name='Espessura (μm)')
 
+plt.figure(figsize=(15, 6))
+# Cria o Boxplot que compara o 'Antes' e 'Depois' para cada 'Variável'
+sns.boxplot(data=df_plot_winsor, x='Variável', y='Espessura (μm)', hue='Status', palette={'Antes': 'red', 'Depois': 'green'})
+plt.title('Validação da Winsorização: Distribuição das Espessuras Antes e Depois', fontsize=16)
+plt.ylabel('Espessura (μm)')
+plt.xlabel('Região de Medição')
+plt.legend(title='Processamento')
+plt.grid(axis='y', linestyle='--')
+plt.tight_layout()
+plt.show()
 
-# DEPOIS
-
+# --- FASE 2: TRANSFORMAÇÃO (Padronização) ---
 
 # 5. PADRONIZAÇÃO (StandardScaler)
-print("\n--- 5. Padronização (StandardScaler) ---")
-
-# Seleciona as colunas de espessura processadas
+print("\n--- 5. Padronização (StandardScaler - Z-Score) ---")
 X = df_processed[epi_cols].values
-
-# Aplica o Standard Scaler: (valor - média) / desvio_padrao
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X)
-
-# Cria o DataFrame Padronizado (df_scaled)
 df_scaled = pd.DataFrame(X_scaled, columns=epi_cols)
 df_final = pd.concat([df_processed[['Index', 'pID', 'Age', 'Gender', 'Eye']].reset_index(drop=True), df_scaled], axis=1)
 
-print("Estatísticas após Padronização (Média ~0, Std ~1):")
-print(df_scaled.describe().T[['mean', 'std']])
+# --- VISUALIZAÇÃO 2: EFEITO DA PADRONIZAÇÃO (Distribuições lado a lado) ---
+print("\n--- 6. Visualização: Efeito da Padronização Z-Score ---")
+plt.figure(figsize=(14, 6))
+plt.suptitle('Validação da Padronização Z-Score', fontsize=16, y=1.02)
 
+# Gráfico 2.1: Antes da Padronização (Escala μm) - Foco na coluna 'C'
+plt.subplot(1, 2, 1)
+sns.histplot(df_processed['C'], kde=True, color='blue', bins=15)
+plt.title(f'A) ANTES da Padronização (Escala μm) | Média: {df_processed["C"].mean():.1f}')
+plt.xlabel('Espessura C (μm)')
+plt.ylabel('Frequência')
 
-# ACHAR O K
-print("\n--- 6. Achar o K: Determinação do Número Ótimo de Clusters ---")
-
-k_range = range(2, 11) # Testando K de 2 a 10
-wcss = []              # Para o Método do Cotovelo (Inércia)
-silhouette_scores = {} # Para o Coeficiente de Silhueta
-
-for k in k_range:
-    kmeans = KMeans(n_clusters=k, random_state=42, n_init='auto')
-    kmeans.fit(X_scaled)
-
-    # 1. Método do Cotovelo
-    wcss.append(kmeans.inertia_)
-
-    # 2. Coeficiente de Silhueta
-    score = silhouette_score(X_scaled, kmeans.labels_)
-    silhouette_scores[k] = score
-    print(f"K={k}: Coeficiente de Silhueta = {score:.4f}")
-
-# Cria uma figura para os dois subplots lado a lado
-plt.figure(figsize=(14, 6)) 
-
-# --------------------------
-# SUBPLOT 1 (Posição: Esquerda): Método do Cotovelo
-# --------------------------
-plt.subplot(1, 2, 1) # 1 linha, 2 colunas, 1ª posição (esquerda)
-plt.plot(k_range, wcss, marker='o', linestyle='-', color='blue')
-plt.title('1. Método do Cotovelo (Inércia vs. K)', fontsize=14)
-plt.xlabel('Número de Clusters (K)')
-plt.ylabel('WCSS (Inércia)')
-plt.xticks(k_range)
-plt.grid(axis='y', linestyle='--')
-
-
-# --------------------------
-# SUBPLOT 2 (Posição: Direita): Coeficiente de Silhueta (AGORA COMO GRÁFICO DE LINHA)
-# --------------------------
-plt.subplot(1, 2, 2) # 1 linha, 2 colunas, 2ª posição (direita)
-# O dicionário silhouette_scores é diretamente plotado em um gráfico de linha
-silhouette_values = list(silhouette_scores.values())
-plt.plot(k_range, silhouette_values, marker='o', linestyle='-', color='blue')
-plt.title('2. Coeficiente de Silhueta Médio por K', fontsize=14)
-plt.xlabel('Número de Clusters (K)')
-plt.ylabel('Média do Coeficiente de Silhueta')
-plt.xticks(k_range)
-plt.grid(axis='y', linestyle='--')
+# Gráfico 2.2: Após a Padronização (Escala Z-Score)
+plt.subplot(1, 2, 2)
+sns.histplot(df_scaled['C'], kde=True, color='blue', bins=15)
+plt.title(f'B) APÓS Padronização (Escala Z-Score) | Média: {df_scaled["C"].mean():.1f}, Std: {df_scaled["C"].std():.1f}')
+plt.xlabel('Espessura C (Z-Score)')
+plt.ylabel('Frequência')
 
 plt.tight_layout()
 plt.show()
 
-# ---
+# --- FASE 2: MINERAÇÃO (Achar o K) ---
+print("\n--- 7. Achar o K: Determinação do Número Ótimo de Clusters ---")
+k_range = range(2, 11); wcss = []; silhouette_scores = {}
+for k in k_range:
+    kmeans = KMeans(n_clusters=k, random_state=42, n_init='auto')
+    kmeans.fit(X_scaled)
+    wcss.append(kmeans.inertia_)
+    silhouette_scores[k] = silhouette_score(X_scaled, kmeans.labels_)
 
-print("\nAnálise concluída. Escolha o K com o maior score de Silhueta (e que faça sentido no Cotovelo) para a aplicação final do K-Means.")
+# --- IDENTIFICAÇÃO DOS MELHORES K ---
+best_silhouette_k = max(silhouette_scores, key=silhouette_scores.get)
+diff_diff_wcss = np.diff(np.diff(wcss))
+if len(diff_diff_wcss) > 0:
+    best_elbow_k_est = np.argmin(diff_diff_wcss) + 3 
+else:
+    best_elbow_k_est = 3
+best_elbow_k = min(max(2, best_elbow_k_est), 10)
 
 
-### Próxima Ação: Aplicar o K-Means e Caracterizar os Perfis
+# --- 8. Visualização Final Unificada (Métodos de K) ---
+print("\n--- 8. Gerando Gráficos de K (Mineração) ---")
 
-'''Após analisar os gráficos gerados:
+plt.figure(figsize=(14, 6)) 
+# SUBPLOT 1 (Esquerda): Método do Cotovelo
+plt.subplot(1, 2, 1)
+plt.plot(k_range, wcss, marker='o', linestyle='-', color='blue')
+label_elbow = f'K={best_elbow_k}, valor que melhor se enquadra na regra do Cotovelo'
+plt.axvline(x=best_elbow_k, color='red', linestyle='--', label=label_elbow)
+plt.title('1. Método do Cotovelo (Inércia vs. K)', fontsize=14)
+plt.xlabel('Número de Clusters (K)')
+plt.ylabel('WCSS (Inércia)')
+plt.xticks(k_range)
+plt.legend(fontsize=8)
+plt.grid(axis='y', linestyle='--')
 
-1.  **Escolha o valor de K (exemplo: 4):** Baseado no cotovelo e no score de silhueta.
-2.  **Rode o K-Means final:** Aplique o algoritmo com o K escolhido.
-3.  **Análise dos Clusters:** Calcule a média das espessuras para cada cluster para dar o **nome/perfil** clínico.
+# SUBPLOT 2 (Direita): Coeficiente de Silhueta
+plt.subplot(1, 2, 2)
+silhouette_values = list(silhouette_scores.values())
+plt.plot(k_range, silhouette_values, marker='o', linestyle='-', color='blue')
+label_silhouette = f'Melhor K (Silhueta) = {best_silhouette_k}'
+plt.axvline(x=best_silhouette_k, color='red', linestyle='--', label=label_silhouette)
+plt.title(f'2. Coeficiente de Silhueta (Melhor K = {best_silhouette_k})', fontsize=14)
+plt.xlabel('Número de Clusters (K)')
+plt.ylabel('Média do Coeficiente de Silhueta')
+plt.xticks(k_range)
+plt.legend(fontsize=8)
+plt.grid(axis='y', linestyle='--')
+plt.tight_layout()
+plt.show()
 
-Qual valor de $K$ você escolheu para continuarmos com a aplicação final do K-Means e a análise dos perfis?'''
+# --- FASE 3: AVALIAÇÃO E CARACTERIZAÇÃO (Aplicação Final) ---
+
+K_MODELO = best_silhouette_k 
+print(f"\nK ESCOLHIDO PARA APLICAÇÃO FINAL: K = {K_MODELO}")
+
+# Aplicação Final do K-Means
+kmeans_final = KMeans(n_clusters=K_MODELO, random_state=42, n_init='auto')
+kmeans_final.fit(X_scaled)
+df_final['Cluster_Label'] = kmeans_final.labels_
+
+# Caracterização (Des-padronização)
+centroids_original = scaler.inverse_transform(kmeans_final.cluster_centers_)
+centroids_df = pd.DataFrame(centroids_original, columns=epi_cols).round(1)
+centroids_df.index.name = 'Perfil / Cluster'
+
+# Sumário Final
+print("\n######################################################")
+print(f"### PERFIS FINAIS DE ESPESSURA (K={K_MODELO}) ###")
+print("######################################################")
+print(centroids_df)
+
+print("\n--- Próxima Ação: NOMEAR OS PERFIS ---")
+print("A fase de Avaliação está completa. Use a tabela acima para nomear os perfis (ex: 'Padrão Central Fino') para a apresentação final.")
