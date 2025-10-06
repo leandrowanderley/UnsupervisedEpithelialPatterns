@@ -153,7 +153,7 @@ plt.show()
 
 # --- FASE 3: AVALIAÇÃO E CARACTERIZAÇÃO (Aplicação Final) ---
 
-K_MODELO = best_silhouette_k 
+K_MODELO = 3
 print(f"\nK ESCOLHIDO PARA APLICAÇÃO FINAL: K = {K_MODELO}")
 
 # Aplicação Final do K-Means
@@ -172,5 +172,5 @@ print(f"### PERFIS FINAIS DE ESPESSURA (K={K_MODELO}) ###")
 print("######################################################")
 print(centroids_df)
 
-print("\n--- Próxima Ação: NOMEAR OS PERFIS ---")
-print("A fase de Avaliação está completa. Use a tabela acima para nomear os perfis (ex: 'Padrão Central Fino') para a apresentação final.")
+# print("\n--- Próxima Ação: NOMEAR OS PERFIS ---")
+# print("A fase de Avaliação está completa. Use a tabela acima para nomear os perfis (ex: 'Padrão Central Fino') para a apresentação final.")
