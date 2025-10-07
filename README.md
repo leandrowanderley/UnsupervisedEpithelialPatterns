@@ -65,9 +65,11 @@ A análise de cluster foi bem-sucedida em revelar 6 padrões distintos de distri
 
 Abaixo, uma galeria com a visualização dos resultados para diferentes valores de `k`.
 
-| k=2 | k=3 | k=6 |
-| :---: | :---: | :---: |
-| ![k=2](graphics/k2.png) | ![k=3](graphics/k3.png) | ![k=6](graphics/k6.png) |
+| k=2 | k=3 |
+| :---: | :---: |
+| ![k=2](graphics/k2.png) | ![k=3](graphics/k3.png) |
+| **k=6** | **k=8** |
+| ![k=6](graphics/k6.png) | ![k=8](graphics/k8.png) |
 
 
 ## Como Executar o Projeto
