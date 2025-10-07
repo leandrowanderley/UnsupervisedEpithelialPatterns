@@ -14,7 +14,7 @@ O processo de análise seguiu 3 etapas principais:
 - **Winsorização:** Tratamento de outliers para reduzir o impacto de valores extremos.
 - **Padronização (Z-Score):** Normalização dos dados para garantir que todas as variáveis contribuam igualmente para a análise de distância.
 
-![Pré-processamento](graphics/padronizacao.png)
+![Pré-processamento](graphics/winsorizacao.png)
 
 ### 2. Determinação do Número de Clusters (K)
 A escolha de K=6 foi baseada em uma análise combinada do **Método do Cotovelo** (inércia) e do **Coeficiente de Silhueta**, que mede a qualidade da clusterização. O valor K=6 apresentou o maior coeficiente de silhueta, indicando a melhor separação entre clusters.
