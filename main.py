@@ -151,26 +151,31 @@ plt.grid(axis='y', linestyle='--')
 plt.tight_layout()
 plt.show()
 
-# --- FASE 3: AVALIAÇÃO E CARACTERIZAÇÃO (Aplicação Final) ---
+# --- FASE 3: AVALIAÇÃO E CARACTERIZAÇÃO (Múltiplas Aplicações Finais) ---
 
-K_MODELO = 3
-print(f"\nK ESCOLHIDO PARA APLICAÇÃO FINAL: K = {K_MODELO}")
+K_MODELOs = [2, 3, 6, 7, 8, 9, 10]
+print(f"\n--- 9. Aplicação e Caracterização para Múltiplos K's: {K_MODELOs} ---")
 
-# Aplicação Final do K-Means
-kmeans_final = KMeans(n_clusters=K_MODELO, random_state=42, n_init='auto')
-kmeans_final.fit(X_scaled)
-df_final['Cluster_Label'] = kmeans_final.labels_
-
-# Caracterização (Des-padronização)
-centroids_original = scaler.inverse_transform(kmeans_final.cluster_centers_)
-centroids_df = pd.DataFrame(centroids_original, columns=epi_cols).round(1)
-centroids_df.index.name = 'Perfil / Cluster'
-
-# Sumário Final
-print("\n######################################################")
-print(f"### PERFIS FINAIS DE ESPESSURA (K={K_MODELO}) ###")
-print("######################################################")
-print(centroids_df)
-
-# print("\n--- Próxima Ação: NOMEAR OS PERFIS ---")
-# print("A fase de Avaliação está completa. Use a tabela acima para nomear os perfis (ex: 'Padrão Central Fino') para a apresentação final.")
+# Iterar sobre a lista de K's para gerar os perfis
+for K_MODELO in K_MODELOs:
+    
+    # Aplicação Final do K-Means
+    kmeans_final = KMeans(n_clusters=K_MODELO, random_state=42, n_init='auto')
+    kmeans_final.fit(X_scaled)
+    
+    # Caracterização (Des-padronização)
+    centroids_original = scaler.inverse_transform(kmeans_final.cluster_centers_)
+    centroids_df = pd.DataFrame(centroids_original, columns=epi_cols).round(1)
+    centroids_df.index.name = 'Perfil / Cluster'
+    
+    # Adicionando contagem de membros por cluster (opcional, mas muito útil)
+    df_final[f'Cluster_Label_K{K_MODELO}'] = kmeans_final.labels_
+    cluster_counts = df_final[f'Cluster_Label_K{K_MODELO}'].value_counts().sort_index()
+    centroids_df['Contagem'] = cluster_counts
+    
+    # Sumário Final
+    print("\n" + "#" * 50)
+    print(f"### PERFIS FINAIS DE ESPESSURA (K = {K_MODELO}) ###")
+    print(f"Silhueta Média para K={K_MODELO}: {silhouette_scores.get(K_MODELO, 'N/A'):.4f}")
+    print("#" * 50)
+    print(centroids_df)
