@@ -53,9 +53,12 @@ Abaixo, uma galeria com a visualização dos resultados para diferentes valores 
 | :---: | :---: | :---: |
 | ![k=2](results/k2.png) | ![k=3](results/k3.png) | ![k=6](results/k6.png) |
 
-| k=7 | k=8 |
-| :---: | :---: |
-| ![k=7](results/k7.png) | ![k=8](results/k8.png) |
+| k=7 | k=8 | k=9 |
+| :---: | :---: | :---: |
+| ![k=7](results/k7.png) | ![k=8](results/k8.png) | ![k=9](results/k9.png) |
+
+| k=10 |
+| ![k=10](results/k10.png) |
 
 ## Como Executar o Projeto
 
