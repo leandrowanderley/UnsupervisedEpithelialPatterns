@@ -32,6 +32,20 @@ O clustering permitiu a categorização dos mapas epiteliais em três padrões c
 *   **Identificação:** O padrão Cunha é isolado pela primeira vez em **K=8**.
     *   **K=8, Perfil 7:** Centro (C) de **53.4µm** e periferia (S, SN, T, IT) com espessura de até **~42µm**.
 
+### Análise do K=6: Identificação Precoce do Padrão Donut
+
+Embora o K=8 seja o ideal, a análise com **K=6** também oferece insights valiosos. Com 6 clusters, o sistema começa a separar os padrões patológicos, embora de forma incompleta.
+
+A análise dos perfis do K=6 revela:
+
+*   **Múltiplos Perfis Planos:** A maioria dos clusters (0, 1, 2, 4 e 5) representam variações de espessura da normalidade, indo desde perfis finos (~45µm) até muito espessos (~60µm).
+
+*   **Isolamento do Padrão Donut:** O **Perfil 3** se destaca claramente como um padrão **Donut**.
+    *   **Característica:** Centro (C) fino com **45.8µm** e uma periferia espessa, com picos nas regiões Superior (S) e Superior-Nasal (SN) de até **56.7µm**.
+    *   **Relevância:** Esta é a primeira indicação clara de um perfil de ectasia (Ceratocone) sendo isolado. No entanto, o padrão Cunha ainda não é identificado.
+
+Esta análise do K=6 reforça a conclusão de que K=8 é superior, pois o K=6 só consegue identificar um dos dois padrões patológicos de interesse.
+
 ## A Importância do K=8: Máxima Riqueza Morfológica
 
 A análise de múltiplos valores de K revelou que **K=8 oferece a visão mais completa e clinicamente útil**. Enquanto valores menores de K agrupam os perfis patológicos, e valores maiores apenas subdividem os já existentes, K=8 é o ponto ótimo que separa e isola os três padrões morfológicos fundamentais:
@@ -46,9 +60,9 @@ O clustering K-Means demonstrou ser uma ferramenta poderosa para a identificaç�
 
 ## Anexo: Visualização dos Clusters
 
-| K=2 (Base Fina vs. Espessa) | K=3 (Estrutura Padrão) | K=8 (Donut + Cunha) |
+| K=3 (Estrutura Padrão) | K=6 (Identificação do Donut) | K=8 (Donut + Cunha) |
 | :---: | :---: | :---: |
-| ![k=2](graphics/k2.png) | ![k=3](graphics/k3.png) | ![k=8](graphics/k8.png) |
+| ![k=3](graphics/k3.png) | ![k=6](graphics/k6.png) | ![k=8](graphics/k8.png) |
 
 ## Como Executar o Projeto
 
