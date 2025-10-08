@@ -13,7 +13,7 @@ O fluxo de trabalho consiste em três etapas principais:
 A qualidade dos dados é fundamental para um clustering significativo. A primeira etapa consiste em um rigoroso processo de limpeza:
 
 - **Carregamento dos Dados:** Os dados são carregados a partir de um arquivo `RTVue_20221110_MLClass.xlsx`.
-- **Remoção de Outliers Clínicos:** Para garantir a robustez da análise, os registros (pacientes) que apresentam valores de espessura biologicamente implausíveis ou que representam combinações raras são removidos. Um exemplo de critério para remoção seria um paciente com espessura superior a 100 µm em uma região (`S > 100 µm`) e inferior a 30 µm em outra (`I < 30 µm`). Esta filtragem é crucial para evitar que outliers distorçam os centróides dos clusters e gerem grupos sem significado clínico.
+- **Remoção de Outliers Clínicos:** Para garantir a robustez da análise, os registros (pacientes) que apresentam valores de espessura biologicamente implausíveis ou que representam combinações raras são removidos. Um exemplo de critério para remoção seria um paciente com espessura superior a 100 µm em uma região (`S > 300 µm`) e inferior a 10 µm em outra (`I < 10 µm`). Esta filtragem é crucial para evitar que outliers distorçam os centróides dos clusters e gerem grupos sem significado clínico.
 - **Tratamento de Valores Ausentes:** Valores ausentes (`NaN`) são preenchidos com a mediana da respectiva coluna.
 
 ### 2. Normalização
