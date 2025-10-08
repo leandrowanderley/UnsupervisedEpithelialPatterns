@@ -90,7 +90,7 @@ if n_samples < 2:
     print("Não há dados suficientes para clustering (menos de 2 amostras).")
 else:
     # limite superior seguro para K: ao menos 2 clusters e no máximo n_samples-1 para permitir cálculo de silhueta
-    max_k_possible = min(10, n_samples - 1)  # não tentamos K = n_samples porque silhouette falha
+    max_k_possible = min(15, n_samples - 1)  # Aumentado para incluir K=12
     if max_k_possible < 2:
         print("Não há amostras suficientes para avaliar múltiplos K (precisa de pelo menos 3 amostras).")
     else:
@@ -172,22 +172,16 @@ else:
             plt.legend(fontsize=8)
 
         plt.tight_layout()
+        plt.savefig('elbow_silhouette.png')
         plt.show()
 
         # --- FASE 4: AVALIAÇÃO E CARACTERIZAÇÃO ---
-        # vamos garantir que K escolhidos caibam nos dados (>=2 e <= n_samples-1)
-        chosen_candidates = set()
-        # incluir K's úteis: 2, 3, heurísticos e o que o usuário já tinha sugerido
-        for k in (2, 3, 6, 7, 8, 10):
-            if 2 <= k <= max_k_possible:
-                chosen_candidates.add(k)
-        if best_elbow_k is not None and 2 <= best_elbow_k <= max_k_possible:
-            chosen_candidates.add(best_elbow_k)
-        if best_silhouette_k is not None and 2 <= best_silhouette_k <= max_k_possible:
-            chosen_candidates.add(best_silhouette_k)
+        # Define a lista de K's para análise conforme solicitado
+        K_MODELOs = [5, 6, 8, 10, 12]
+        
+        # Filtra a lista para garantir que os valores de K sejam possíveis com os dados
+        K_MODELOs = [k for k in K_MODELOs if 2 <= k <= max_k_possible]
 
-        # ordem final e filtro por disponibilidade de amostras
-        K_MODELOs = sorted(list(chosen_candidates))
         if not K_MODELOs:
             print("Nenhum K válido selecionado para caracterização (filtro por tamanho de amostra).")
         else:

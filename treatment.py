@@ -14,16 +14,16 @@ EPI_COLS = ['C', 'S', 'ST', 'T', 'IT', 'I', 'IN', 'N', 'SN']
 
 # Dicionário de Limites Clínicos Específicos (Mínimo, Máximo)
 CLINICAL_LIMITS = {
-    'C': (40, 65),
-    'S': (30, 100), 'ST': (30, 100), 'T': (30, 100), 'IT': (30, 100), 
-    'I': (30, 100), 'IN': (30, 100), 'N': (30, 100), 'SN': (30, 100)
+    'C': (10, 160),
+    'S': (10, 300), 'ST': (10, 300), 'T': (10, 300), 'IT': (10, 300), 
+    'I': (10, 300), 'IN': (10, 300), 'N': (10, 300), 'SN': (10, 300)
 }
 # ----------------------------------------------------
 
 def load_and_clean_epithelium_data(file_name: str, epi_cols: list = EPI_COLS, limits: dict = CLINICAL_LIMITS) -> pd.DataFrame:
     """
     Carrega dados de espessura do epitélio de um arquivo XLSX e realiza 
-    o tratamento de valores biologicamente impossíveis (fora dos limites clínicos).
+    a remoção de registros com valores biologicamente impossíveis (fora dos limites clínicos).
     """
     
     # 1. CARREGAMENTO DOS DADOS ORIGINAIS
@@ -34,51 +34,49 @@ def load_and_clean_epithelium_data(file_name: str, epi_cols: list = EPI_COLS, li
         print(f"ERRO: Arquivo '{file_name}' não encontrado. Verifique o nome/caminho.")
         return None 
 
-    df_clean = df.copy()
-    total_impossiveis = 0
-    registros_com_impossiveis = set()
+    df_initial = df.copy()
+    linhas_originais = len(df_initial)
+    indices_para_remover = set()
 
-    print("\n--- 2. Identificação e Tratamento de Valores Biologicamente Impossíveis (Clínicos) ---")
+    print("\n--- 2. Identificação de Registros com Valores Biologicamente Impossíveis (Outliers Clínicos) ---")
 
     for col in epi_cols:
-        if col not in df_clean.columns:
+        if col not in df_initial.columns:
             print(f"AVISO: Coluna '{col}' não encontrada no DataFrame e foi ignorada.")
             continue
             
         MIN_LIM, MAX_LIM = limits.get(col, (30, 100))
         
-        # 2.1. Identificar valores impossíveis
-        impossiveis_min = df_clean[col] < MIN_LIM
-        impossiveis_max = df_clean[col] > MAX_LIM
+        # Identificar valores fora dos limites
+        outliers = df_initial[(df_initial[col] < MIN_LIM) | (df_initial[col] > MAX_LIM)]
         
-        count_min = impossiveis_min.sum()
-        count_max = impossiveis_max.sum()
-        total_col = count_min + count_max
-        total_impossiveis += total_col
+        if not outliers.empty:
+            indices_para_remover.update(outliers.index)
+            print(f"Coluna '{col}': Encontrados {len(outliers)} registros fora do limite ({MIN_LIM}-{MAX_LIM} µm).")
 
-        # 2.2. Registrar os índices (registros/linhas) afetados
-        if total_col > 0:
-            indices_min = df_clean[impossiveis_min].index.tolist()
-            indices_max = df_clean[impossiveis_max].index.tolist()
-            registros_com_impossiveis.update(indices_min + indices_max)
+    # --- 3. REMOÇÃO DOS REGISTROS ---
+    if indices_para_remover:
+        df_clean = df_initial.drop(index=list(indices_para_remover)).copy()
+        num_removidos = len(indices_para_remover)
+        print(f"\n--- 3. Remoção de {num_removidos} registros (linhas) concluída. ---")
+    else:
+        df_clean = df_initial.copy()
+        print("\n--- 3. Nenhum registro com valores impossíveis encontrado. ---")
 
-            print(f"Coluna {col} (Limites: {MIN_LIM}-{MAX_LIM} µm):")
-            print(f"  - {count_min} valores tratados (ajustados para {MIN_LIM} µm)")
-            print(f"  - {count_max} valores tratados (ajustados para {MAX_LIM} µm)")
+    # --- 4. TRATAMENTO DE VALORES AUSENTES (NaN) ---
+    # Apenas nas colunas de epitélio e após a remoção de outliers
+    for col in epi_cols:
+        if col in df_clean.columns and df_clean[col].isnull().any():
+            median_val = df_clean[col].median()
+            df_clean[col] = df_clean[col].fillna(median_val)
+            print(f"Valores NaN na coluna '{col}' preenchidos com a mediana ({median_val:.2f}).")
 
-        # 2.3. TRATAMENTO: Substituir valores impossíveis pelo limite clínico mais próximo (Clamping)
-        df_clean.loc[impossiveis_min, col] = MIN_LIM
-        df_clean.loc[impossiveis_max, col] = MAX_LIM
-        
-        # 2.4. Trata NaN
-        df_clean[col] = df_clean[col].fillna(df_clean[col].median())
-
-
-    # --- 3. Sumário e Visualização dos Resultados (Simplificada na função) ---
+    # --- 5. Sumário ---
     print("\n" + "="*70)
-    print(f"RESUMO DO TRATAMENTO DE VALORES BIOLOGICAMENTE IMPOSSÍVEIS")
-    print(f"Total de valores corrigidos: {total_impossiveis}")
-    print(f"Total de pacientes (linhas) afetados: {len(registros_com_impossiveis)}")
+    print("RESUMO DO TRATAMENTO DE DADOS")
+    print(f"Linhas originais: {linhas_originais}")
+    print(f"Linhas removidas por conter outliers clínicos: {len(indices_para_remover)}")
+    print(f"Linhas restantes para análise: {len(df_clean)}")
     print("="*70)
     
     return df_clean

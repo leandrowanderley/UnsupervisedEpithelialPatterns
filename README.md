@@ -1,76 +1,44 @@
-# Análise de Padrões Morfológicos em Mapas Epiteliais
+# Análise de Padrões Morfológicos em Mapas Epiteliais com K-Means
 
-## Resumo Executivo
+## Resumo
 
-Este projeto utiliza clustering não supervisionado (K-Means) para identificar padrões morfológicos em mapas de espessura epitelial. A análise revelou três perfis clínicos principais: **Plano (normalidade)**, **Donut (suspeita de ectasia)** e **Cunha (suspeita de DMP ou pós-cirurgia)**.
+Este projeto utiliza o algoritmo de clustering não supervisionado K-Means para identificar e caracterizar padrões morfológicos em mapas de espessura epitelial da córnea. O objetivo é agrupar pacientes com perfis de espessura semelhantes, permitindo a descoberta de assinaturas que podem estar associadas a diferentes condições clínicas, como ectasias (ex: ceratocone) ou perfis pós-cirúrgicos.
 
-A análise demonstrou que **K=8 é o valor mais informativo**, pois é o primeiro a isolar simultaneamente os padrões Donut e Cunha, oferecendo a visão morfológica mais completa e clinicamente relevante.
+## Metodologia
 
-## Padrões Morfológicos Identificados
+O fluxo de trabalho consiste em três etapas principais:
 
-O clustering permitiu a categorização dos mapas epiteliais em três padrões com distintas assinaturas morfológicas e implicações clínicas.
+### 1. Tratamento e Limpeza dos Dados
 
-### Padrão 1: Plano (Homogêneo)
+A qualidade dos dados é fundamental para um clustering significativo. A primeira etapa consiste em um rigoroso processo de limpeza:
 
-*   **Descrição:** Caracterizado por uma espessura epitelial relativamente uniforme em toda a área do mapa. Este padrão representa a morfologia de base, ou normalidade.
-*   **Identificação:** É claramente visível em clusterizações com poucos clusters, como **K=2** e **K=3**, que separam a população em perfis "Fino", "Médio" e "Espesso", todos com morfologia plana.
-    *   **K=3, Perfil 2 (Plano Médio/Padrão):** O maior cluster (2767 amostras), representando o perfil mais comum da normalidade, com espessura média de ~53µm.
+- **Carregamento dos Dados:** Os dados são carregados a partir de um arquivo `RTVue_20221110_MLClass.xlsx`.
+- **Remoção de Outliers Clínicos:** Para garantir a robustez da análise, os registros (pacientes) que apresentam valores de espessura biologicamente implausíveis ou que representam combinações raras são removidos. Um exemplo de critério para remoção seria um paciente com espessura superior a 100 µm em uma região (`S > 100 µm`) e inferior a 30 µm em outra (`I < 30 µm`). Esta filtragem é crucial para evitar que outliers distorçam os centróides dos clusters e gerem grupos sem significado clínico.
+- **Tratamento de Valores Ausentes:** Valores ausentes (`NaN`) são preenchidos com a mediana da respectiva coluna.
 
-### Padrão 2: Donut (Anel)
+### 2. Normalização
 
-*   **Descrição:** Apresenta um centro epitelial fino e uma periferia mais espessa.
-*   **Relevância Clínica:** Este padrão é um achado chave, frequentemente associado a ectasias como o **Ceratocone**, onde a remodelação epitelial compensa o afinamento estromal central.
-*   **Identificação:** O padrão Donut é isolado pela primeira vez em **K=5**.
-    *   **K=5, Perfil 2:** Centro (C) de **44.8µm** e periferia superior (S, SN, N) com espessura de até **55.9µm**.
-*   **Refinamento em K=8:** O padrão é ainda mais bem definido.
-    *   **K=8, Perfil 1 (Donut Extremo):** Centro (C) de **44.1µm** e periferia superior de até **55.5µm**, sugerindo casos de ectasia subclínica ou avançada.
+Após a limpeza, os dados de espessura epitelial são normalizados utilizando `MinMaxScaler`. Este processo coloca todas as variáveis na mesma escala (entre 0 e 1), garantindo que nenhuma região do mapa tenha um peso desproporcional durante o cálculo das distâncias no algoritmo K-Means.
 
-### Padrão 3: Cunha (Wedge)
+### 3. Clusterização com K-Means
 
-*   **Descrição:** Caracterizado por um centro epitelial espesso e uma periferia fina.
-*   **Relevância Clínica:** Padrão vital para a identificação de condições como a **Degeneração Marginal Pelúcida (DMP)** ou para o acompanhamento de perfis pós-cirúrgicos (ablação).
-*   **Identificação:** O padrão Cunha é isolado pela primeira vez em **K=8**.
-    *   **K=8, Perfil 7:** Centro (C) de **53.4µm** e periferia (S, SN, T, IT) com espessura de até **~42µm**.
+O K-Means é aplicado aos dados normalizados para diferentes valores de `K` (número de clusters). A análise foi focada em `K = {5, 6, 8, 10, 12}` para explorar desde agrupamentos mais gerais até a identificação de sub-padrões mais específicos e raros.
 
-### Análise do K=6: Identificação Precoce do Padrão Donut
+## Resultados e Análise dos Perfis
 
-Embora o K=8 seja o ideal, a análise com **K=6** também oferece insights valiosos. Com 6 clusters, o sistema começa a separar os padrões patológicos, embora de forma incompleta.
+A análise dos centróides para cada valor de `K` revelou diferentes padrões morfológicos. À medida que `K` aumenta, padrões mais sutis e raros são isolados.
 
-A análise dos perfis do K=6 revela:
-
-*   **Múltiplos Perfis Planos:** A maioria dos clusters (0, 1, 2, 4 e 5) representam variações de espessura da normalidade, indo desde perfis finos (~45µm) até muito espessos (~60µm).
-
-*   **Isolamento do Padrão Donut:** O **Perfil 3** se destaca claramente como um padrão **Donut**.
-    *   **Característica:** Centro (C) fino com **45.8µm** e uma periferia espessa, com picos nas regiões Superior (S) e Superior-Nasal (SN) de até **56.7µm**.
-    *   **Relevância:** Esta é a primeira indicação clara de um perfil de ectasia (Ceratocone) sendo isolado. No entanto, o padrão Cunha ainda não é identificado.
-
-Esta análise do K=6 reforça a conclusão de que K=8 é superior, pois o K=6 só consegue identificar um dos dois padrões patológicos de interesse.
-
-## A Importância do K=8: Máxima Riqueza Morfológica
-
-A análise de múltiplos valores de K revelou que **K=8 oferece a visão mais completa e clinicamente útil**. Enquanto valores menores de K agrupam os perfis patológicos, e valores maiores apenas subdividem os já existentes, K=8 é o ponto ótimo que separa e isola os três padrões morfológicos fundamentais:
-
-1.  **Perfis Planos:** Múltiplos clusters em K=8 representam variações da normalidade (fino, médio, espesso).
-2.  **Padrão Donut:** Isola o perfil de afinamento central (Cluster 1).
-3.  **Padrão Cunha:** Isola o perfil de espessamento central (Cluster 7).
-
-## Conclusão
-
-O clustering K-Means demonstrou ser uma ferramenta poderosa para a identificação de padrões morfológicos epiteliais. A categorização em perfis **Plano, Donut e Cunha** fornece um framework robusto para a triagem e acompanhamento de pacientes, com K=8 sendo a configuração de análise mais recomendada.
-
-## Anexo: Visualização dos Clusters
-
-| K=3 (Estrutura Padrão) | K=6 (Identificação do Donut) | K=8 (Donut + Cunha) |
-| :---: | :---: | :---: |
-| ![k=3](graphics/k3.png) | ![k=6](graphics/k6.png) | ![k=8](graphics/k8.png) |
+*(A análise detalhada dos perfis para cada K será fornecida separadamente).*
 
 ## Como Executar o Projeto
 
-1.  Instale as dependências:
+1.  **Pré-requisitos:** Certifique-se de ter o Python e as seguintes bibliotecas instaladas:
     ```bash
-    pip install pandas numpy scikit-learn matplotlib seaborn
+    pip install pandas numpy scikit-learn matplotlib seaborn openpyxl
     ```
-2.  Execute o script principal:
+2.  **Estrutura do Projeto:** O arquivo de dados `RTVue_20221110_MLClass.xlsx` deve estar no mesmo diretório que os scripts Python.
+3.  **Execução:** Para rodar a análise completa, execute o script principal:
     ```bash
     python main.py
     ```
+    O script irá realizar o tratamento dos dados, executar a clusterização e imprimir os perfis dos centróides para os valores de K definidos.
